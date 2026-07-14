@@ -55,13 +55,58 @@ TRACK C: YOUR OWN IDEA
 =============================== PLAN FIRST ====================================
 Before you write code, fill this in (it will keep you honest all week):
 
-  MY PROJECT: (one sentence)
-  THE PIECES I NEED TO BUILD: (list 3-6 functions or parts)
+  MY PROJECT: A Factory Game
+  THE PIECES I NEED TO BUILD:
+    The different factory parts:
+      Resource attainment,
+      Resource Processing,
+      Output
+    Ways to do research and upgrades
+    Maybe add defenses and attackers
+    Exploration and world generation
   WHAT I WILL DEMO AT SHOWCASE: (the 60-second version)
 
 ==============================================================================
 Build your project below (and split it into more .py files if it gets big;
 the grader reads all of them). Delete this line and start!
 '''
+import pygame
+import random
+import sys
+from pygame.locals import *
+from PIL import Image 
+pygame.init()
+
+screen = pygame.display.set_mode((1200,700))
+FPS = pygame.time.Clock()
+FPS.tick(60)
+
+player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+class sunflower(pygame.sprite.Sprite):
+  def __init__(self, y_offset,x_offset):
+    super().__init__()
+    self.image = pygame.transform.load("sunflower.png")
+    self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
+    
+
+class zombie(pygame.sprite.Sprite):
+  def __init__(self, y_offset):
+    super().__init__()
+    self.image = pygame.image.load("zombie.png")
+    self.surf = pygame.transform.scale(self.image, (78.75,78.75))
+    self.x = 1200
+    self.y = y_offset
+    
+
+while True:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+
+    keys = pygame.key.get_pressed()
+    pygame.display.update()
+
+
 
 print("My final project is not built yet!")
