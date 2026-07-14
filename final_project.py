@@ -79,7 +79,7 @@ pygame.init()
 
 vec = pygame.math.Vector2
 
-screen = pygame.display.set_mode((1200,700))
+screen = pygame.display.set_mode((1200,675))
 FPS = pygame.time.Clock()
 FPS.tick(60)
 
@@ -122,6 +122,7 @@ class zombie(pygame.sprite.Sprite):
 all_sprites = pygame.sprite.Group()
 
 test_sunflower = sunflower(50,50)
+test_peashooter = peashooter(50,45)
 test_zombie = zombie(50)
 
 while True:
