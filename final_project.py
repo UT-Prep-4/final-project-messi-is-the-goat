@@ -77,6 +77,8 @@ from pygame.locals import *
 from PIL import Image 
 pygame.init()
 
+vec = pygame.math.Vector2
+
 screen = pygame.display.set_mode((1200,700))
 FPS = pygame.time.Clock()
 FPS.tick(60)
@@ -85,24 +87,51 @@ player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 class sunflower(pygame.sprite.Sprite):
   def __init__(self, y_offset,x_offset):
     super().__init__()
-    self.image = pygame.transform.load("sunflower.png")
+    self.pos = vec((x_offset, y_offset))
+    self.image = pygame.image.load("sunflower.png")
     self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
-    
+    all_sprites.add(self)
+
+  def update(self):
+     pass
+  
+class peashooter(pygame.sprite.Sprite):
+  def __init__(self, y_offset,x_offset):
+    super().__init__()
+    self.pos = vec((x_offset, y_offset))
+    self.image = pygame.image.load("peashooter.png")
+    self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
+    all_sprites.add(self)
+
+  def update(self):
+     pass
+
 
 class zombie(pygame.sprite.Sprite):
   def __init__(self, y_offset):
     super().__init__()
+    self.pos = vec((1000, y_offset))
     self.image = pygame.image.load("zombie.png")
-    self.surf = pygame.transform.scale(self.image, (78.75,78.75))
-    self.x = 1200
-    self.y = y_offset
-    
+    self.surf = pygame.transform.scale(self.image, (60,96.1))
+    all_sprites.add(self)
+  
+  def update(self):
+    self.pos.x -= 10
+
+
+all_sprites = pygame.sprite.Group()
+
+test_sunflower = sunflower(50,50)
+test_zombie = zombie(50)
 
 while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+    for entry in all_sprites:
+        entry.update()
+        screen.blit(entry.surf, entry.pos)
 
     keys = pygame.key.get_pressed()
     pygame.display.update()
