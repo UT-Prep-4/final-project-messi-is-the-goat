@@ -166,7 +166,6 @@ class zombie(pygame.sprite.Sprite):
   def update(self):
     self.pos.x -= 0.5
     if self.pos.x < 300:
-       
        self.kill()
 
 max_zombies = 0
