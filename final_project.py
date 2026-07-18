@@ -87,7 +87,7 @@ screen = pygame.display.set_mode((1200,675))
 FPS = pygame.time.Clock()
 quit_event = pygame.event.Event(pygame.QUIT)
 current_zombies = 0
-sun = 20
+sun = 80
 placeing = False
 
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
@@ -206,7 +206,24 @@ class potatomine(pygame.sprite.Sprite):
     pass
   
   def end(self):
+    potato_explosion(self.pos.y, self.pos.x)
     self.kill()
+
+class potato_explosion(pygame.sprite.Sprite):
+  def __init__(self, y_offset,x_offset):
+    super().__init__()
+    self.pos = vec((x_offset, y_offset))
+    self.image = pygame.image.load("explosion.png")
+    self.rect = pygame.Rect(self.pos.x, self.pos.y,79,79)
+    self.surf = pygame.transform.scale(self.image, (90, 90)) 
+    all_sprites.add(self)
+    self.time = 0
+  
+  def update(self):
+    if self.time > 60:
+      self.kill()
+    self.time += 1
+    
 
 class sunflower_sun(pygame.sprite.Sprite):
   def __init__(self, y_offset,x_offset):
@@ -331,13 +348,13 @@ zombies = pygame.sprite.Group()
 plant_attack = pygame.sprite.Group()
 plants = pygame.sprite.Group()
 
-test_wall_nut = wall_nut(225,1020)
-test_potatomine = potatomine(325,325)
-test_sunflower = sunflower(420,325)
-# test_sunflower_sun = sunflower_sun(420,400)
-test_peashooter = peashooter(125, 325)
-# test_peashooter_pea = peashooter_pea(125,400)
-#test_zombie = zombie(125)
+# test_wall_nut = wall_nut(225,1020)
+# test_potatomine = potatomine(325,325)
+# test_sunflower = sunflower(420,325)
+# # test_sunflower_sun = sunflower_sun(420,400)
+# test_peashooter = peashooter(125, 325)
+# # test_peashooter_pea = peashooter_pea(125,400)
+# #test_zombie = zombie(125)
 
 bg_image = pygame.image.load("lawn.jpg").convert()
 bg_image = pygame.transform.scale(bg_image, (1600, 675))
