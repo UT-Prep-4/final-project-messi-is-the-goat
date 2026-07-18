@@ -1,4 +1,4 @@
-# Project Title (REPLACE THIS with your project's name)
+#Python Plants VS Zombies
 
 ## What it is
 REPLACE THIS: 2-4 sentences a stranger could understand. What does your program

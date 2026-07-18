@@ -79,12 +79,16 @@ pygame.init()
 
 vec = pygame.math.Vector2
 
+font = pygame.font.Font(None, 48)
+text_surface = font.render("Hello, Pygame!", True, (255, 255, 255))
+
+globalSpeed= 500
 screen = pygame.display.set_mode((1200,675))
 FPS = pygame.time.Clock()
-FPS.tick(60)
-
+quit_event = pygame.event.Event(pygame.QUIT)
 current_zombies = 0
 sun = 20
+placeing = False
 
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 class sunflower(pygame.sprite.Sprite):
@@ -94,10 +98,31 @@ class sunflower(pygame.sprite.Sprite):
     self.image = pygame.image.load("sunflower.png")
     self.rect = self.image.get_rect(topleft=(self.pos.x, self.pos.y))
     self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
+    self.spacing = 0
+    self.health = 20
+    self.cooldown = 30
     all_sprites.add(self)
+    plants.add(self)
+
+  def clicked(self):
+    pass
+
+  def attacked(self):
+    if self.cooldown < 0:
+      self.health -= 5
+      self.cooldown = 30
+    else:
+      self.cooldown -= 1
+    
+    if self.health <= 0:
+        self.kill()
 
   def update(self):
-     pass
+    if self.spacing > 0:
+      sunflower_sun(self.pos.y + random.randint(-20, 20), self.pos.x + random.randint(-20, 20))
+      self.spacing = random.randint(-500, -400)
+    self.spacing += 1
+    
   
 class peashooter(pygame.sprite.Sprite):
   def __init__(self, y_offset,x_offset):
@@ -107,13 +132,29 @@ class peashooter(pygame.sprite.Sprite):
     self.image = pygame.image.load("peashooter.png")
     self.rect = self.image.get_rect(topleft=(self.pos.x, self.pos.y))
     self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
+    self.health = 20
+    self.cooldown = 30
     all_sprites.add(self)
+    plants.add(self)
+  
+  def clicked(self):
+    pass
 
   def update(self):
     if [sprite.pos.y for sprite in zombies if sprite.pos.y == self.pos.y] != []:
       if self.inc % 1000 == 0:
         peashooter_pea(self.pos.y, self.pos.x + 20)
       self.inc += 1
+
+  def attacked(self):
+    if self.cooldown < 0:
+      self.health -= 5
+      self.cooldown = 30
+    else:
+      self.cooldown -= 1
+    
+    if self.health <= 0:
+        self.kill()
 
 
 
@@ -124,10 +165,28 @@ class wall_nut(pygame.sprite.Sprite):
     self.image = pygame.image.load("wallnut.png")
     self.rect = self.image.get_rect(topleft=(self.pos.x, self.pos.y))
     self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
+    self.health = 50
+    self.cooldown = 30
     all_sprites.add(self)
+    walls.add(self)
+    plants.add(self)
+
+  def clicked(self):
+    pass
 
   def update(self):
-     pass
+    pass
+  
+  def attacked(self):
+    if self.cooldown < 0:
+      self.health -= 5
+      self.cooldown = 30
+    else:
+      self.cooldown -= 1
+    
+    if self.health <= 0:
+        self.kill()
+
 
 class potatomine(pygame.sprite.Sprite):
   def __init__(self, y_offset,x_offset):
@@ -138,9 +197,13 @@ class potatomine(pygame.sprite.Sprite):
     self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
     all_sprites.add(self)
     plant_attack.add(self)
+    #plants.add(self)
 
   def update(self):
      pass
+  
+  def clicked(self):
+    pass
   
   def end(self):
     self.kill()
@@ -154,6 +217,14 @@ class sunflower_sun(pygame.sprite.Sprite):
     self.surf = pygame.transform.scale(self.image, (78.75,78.75)) 
     all_sprites.add(self)
 
+  def clicked(self):
+    global sun 
+    sun += 10
+    self.end()
+
+  def end(self):
+    self.kill()
+
   def update(self):
      pass
 
@@ -166,6 +237,9 @@ class peashooter_pea(pygame.sprite.Sprite):
     self.surf = pygame.transform.scale(self.image, (42,42)) 
     all_sprites.add(self)
     plant_attack.add(self)
+
+  def clicked(self):
+    pass
 
   def update(self):
     self.pos.x += 4
@@ -187,21 +261,39 @@ class zombie(pygame.sprite.Sprite):
     all_sprites.add(self)
     zombies.add(self)
 
-  
+  def clicked(self):
+    pass
+
   def update(self):
-    self.pos.x -= 0.5
+    global current_zombies
+    collided_walls = False
+    for sprite in plants.sprites():
+      if sprite.pos.y == self.pos.y:
+        if abs((sprite.pos.x+60) - self.pos.x) < 10:
+          collided_walls = True
+          sprite.attacked()
+
+    if collided_walls == False:
+      self.pos.x -= 0.30
+
     self.rect = pygame.Rect(self.pos.x, self.pos.y,60,96.1)
     if self.pos.x < 300:
        self.kill()
+       pygame.event.post(quit_event)
     collided_enemies = pygame.sprite.spritecollideany(self, plant_attack)
     #print(collided_enemies)
     #print(self.rect)
     if collided_enemies != None:  
       print("hit")
       print(plant_attack)
+      
       collided_enemies.end()
-      self.health -= 5
+      if isinstance(collided_enemies, peashooter_pea):
+        self.health -= 5
+      else:
+        self.health -= 1000
       if self.health <= 0:
+        current_zombies -= 1
         self.kill()
 
 max_zombies = 0
@@ -210,24 +302,42 @@ max_zombies = 0
 
 def Zombie_gen(speed = 100):
   global current_zombies
-  if random.randint(1,speed) == 25:
-    if max_zombies > current_zombies:
+  global globalSpeed
+  if random.randint(1,speed) == 1:
+    print(f"{max_zombies}, {current_zombies}")
+    #if max_zombies > current_zombies:
+    if True:
       current_zombies += 1
       new_zombie = zombie(random.choice([125, 225, 325, 420, 520]))
+      if globalSpeed > 15:
+        globalSpeed -= 10
       
+def placment(targetX, targetY, key):
+  global sun
+  roundedX = min([325, 425, 525, 625, 725, 820, 920, 1020, 1120], key=lambda x: abs(x - targetX))
+  roundedY = min([125, 225, 325, 420, 520], key=lambda y: abs(y - targetY))
+  if sun >= 20:
+   try:
+    {pygame.K_1:sunflower, pygame.K_2:peashooter, pygame.K_3:wall_nut, pygame.K_4:potatomine}[key](roundedY,roundedX)
+    sun -= 20
+   except:
+    pass
+  return
       
 
 all_sprites = pygame.sprite.Group()
+walls = pygame.sprite.Group()
 zombies = pygame.sprite.Group()
 plant_attack = pygame.sprite.Group()
+plants = pygame.sprite.Group()
 
-test_wall_nut = wall_nut(225,325)
+test_wall_nut = wall_nut(225,1020)
 test_potatomine = potatomine(325,325)
 test_sunflower = sunflower(420,325)
-test_sunflower_sun = sunflower_sun(420,400)
+# test_sunflower_sun = sunflower_sun(420,400)
 test_peashooter = peashooter(125, 325)
-#test_peashooter_pea = peashooter_pea(125,400)
-test_zombie = zombie(125)
+# test_peashooter_pea = peashooter_pea(125,400)
+#test_zombie = zombie(125)
 
 bg_image = pygame.image.load("lawn.jpg").convert()
 bg_image = pygame.transform.scale(bg_image, (1600, 675))
@@ -236,16 +346,36 @@ while True:
     screen.blit(bg_image, (-250, 0))
     for event in pygame.event.get():
         if event.type == QUIT:
+            print("ending")
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+          if event.button == 1:
+            if placeing == False:
+              mouse_pos = event.pos  
+
+              clicked_sprites = [s for s in all_sprites if s.rect.collidepoint(mouse_pos)]
+              for sprite in clicked_sprites:
+                sprite.clicked()
+            else:
+              placment(event.pos[0], event.pos[1], placeing)
+              placeing = False
+        elif event.type == pygame.KEYDOWN:
+          placeing = event.key
+          
+
     for entry in all_sprites:
         entry.update()
         screen.blit(entry.surf, entry.pos)
+
+    text_surface = font.render(f"Sun: {sun}", True, (255, 255, 255))
+    screen.blit(text_surface, (20, 20))
     max_zombies = 20
     #hits = pygame.sprite.groupcollide(zombies, plant_attack, True, True)
-    Zombie_gen(500)
-    keys = pygame.key.get_pressed()
+    Zombie_gen(globalSpeed)
+    # keys = pygame.key.get_pressed()
     pygame.display.update()
+    FPS.tick(60)
 
 
 
